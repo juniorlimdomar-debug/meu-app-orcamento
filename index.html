@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento Mensal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <h1>Orçamento Mensal</h1>
+
+    <div id="lista"></div>
+
+    <div id="form-container" class="form-container hidden">
+        <h2>Novo Cadastro</h2>
+
+        <input id="descricao" type="text" placeholder="Descrição">
+        <input id="valor" type="number" placeholder="Valor (R$)">
+        <input id="categoria" type="text" placeholder="Categoria">
+
+        <button id="salvar">Salvar</button>
+        <button id="fechar" class="fechar">Fechar</button>
+    </div>
+
+    <button id="add-btn" class="add-btn">+</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
