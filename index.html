@@ -1,30 +1,859 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+<!doctype html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orçamento Mensal</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Financeiro</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --panel:#f3f4f6;
+
+      --green:#18a957;
+      --orange:#f46a22;
+      --navy:#1f2d3d;
+      --blue:#2b6cb0;
+      --shadow: 0 10px 24px rgba(2,6,23,.08);
+      --radius:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:#fff;
+      color:var(--ink);
+    }
+
+    .wrap{
+      max-width:1180px;
+      margin:0 auto;
+      padding:18px 16px 28px;
+    }
+
+    /* ====== GRID PRINCIPAL (desktop) ====== */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    /* ====== TÍTULO ====== */
+    .month{
+      text-align:center;
+      font-weight:800;
+      letter-spacing:.8px;
+      color:var(--orange);
+      margin:2px 0 10px;
+      font-size:28px;
+    }
+
+    /* ====== TOP KPIs ====== */
+    .kpiRow{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:16px;
+      padding:8px 10px 0;
+    }
+
+    .kpi{
+      border-left:1px dotted #cbd5e1;
+      padding-left:12px;
+      min-height:96px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      gap:6px;
+    }
+    .kpi:first-child{ border-left:none; padding-left:0; }
+    .kpi .bar{
+      height:56px;
+      border-radius:10px 10px 0 0;
+      background:var(--line);
+      width:72%;
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,.05);
+    }
+    .kpi .label{
+      font-weight:800;
+      letter-spacing:.3px;
+      font-size:14px;
+    }
+    .kpi .value{
+      font-weight:800;
+      color:#0b1220;
+      font-size:16px;
+    }
+
+    /* cores aproximadas da imagem */
+    .bar.green{ background: rgba(24,169,87,.95); }
+    .bar.navy{ background: rgba(31,45,61,.92); }
+    .bar.orange{ background: rgba(244,106,34,.95); }
+
+    /* ====== CARD À DIREITA ====== */
+    .sideCard{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .sideTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      margin-bottom:10px;
+    }
+    .sideTop .ttl{
+      font-weight:800;
+      color:#334155;
+      font-size:12px;
+      letter-spacing:.7px;
+    }
+    .sideTop .money{
+      font-weight:900;
+      font-size:22px;
+      white-space:nowrap;
+    }
+    .sideMid{
+      text-align:center;
+      padding:6px 0 6px;
+      border-top:1px dashed #cbd5e1;
+      border-bottom:1px dashed #cbd5e1;
+      margin:10px 0 12px;
+    }
+    .sideMid .pct{
+      font-weight:900;
+      font-size:26px;
+      margin:2px 0;
+      color:#0f172a;
+    }
+    .sideMid .sub{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:2px;
+    }
+    .sideBottom{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      align-items:end;
+    }
+    .sideBottom .big{
+      font-weight:950;
+      font-size:42px;
+      line-height:1;
+      letter-spacing:-1px;
+    }
+    .sideBottom .recv{
+      text-align:right;
+      font-size:12px;
+      color:#111827;
+      white-space:nowrap;
+    }
+    .sideBottom .recv b{
+      font-weight:900;
+      font-size:13px;
+    }
+
+    /* ====== BARRAS (meio) ====== */
+    .midBars{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+      margin-top:12px;
+      align-items:start;
+    }
+    .barCard{
+      border-top:1px solid transparent;
+      padding:10px 10px 0;
+    }
+    .barCard h3{
+      margin:0 0 8px;
+      font-size:16px;
+      font-weight:900;
+      color:var(--orange);
+      letter-spacing:.3px;
+    }
+    .miniRows{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:6px;
+    }
+    .miniRow{
+      display:grid;
+      grid-template-columns: 96px 1fr 84px;
+      gap:10px;
+      align-items:center;
+      font-size:12px;
+      color:#0f172a;
+    }
+    .track{
+      height:14px;
+      background:#e5e7eb;
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid #e5e7eb;
+    }
+    .fill{
+      height:100%;
+      width:50%;
+      background:var(--navy);
+    }
+    .fill.green{ background:var(--green); }
+    .fill.orange{ background:var(--orange); }
+    .amt{
+      text-align:right;
+      font-family:var(--mono);
+      font-weight:800;
+      color:#0f172a;
+    }
+
+    /* ====== TABELAS (base) ====== */
+    .tables{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    .tcard{
+      border-radius:16px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .thead{
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(0deg, #fff, #fff);
+    }
+    .thead h3{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.3px;
+      color:var(--orange);
+      font-weight:900;
+    }
+    .thead .meta{
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      white-space:nowrap;
+    }
+    .meta b{ color:#0f172a; font-weight:900; }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    th, td{
+      padding:10px 12px;
+      border-bottom:1px solid #edf2f7;
+      vertical-align:middle;
+    }
+    th{
+      text-align:left;
+      font-size:12px;
+      color:#334155;
+      letter-spacing:.4px;
+      background:#fff7f2;
+      border-bottom:1px solid #f3d6c6;
+    }
+    .soft{
+      background:#fff7f2;
+    }
+    .right{ text-align:right; }
+    .center{ text-align:center; }
+
+    /* Editáveis */
+    .editable{
+      outline:none;
+      padding:2px 6px;
+      border-radius:8px;
+      display:inline-block;
+      min-width:64px;
+      text-align:right;
+      font-family:var(--mono);
+      font-weight:800;
+    }
+    .editable:focus{
+      box-shadow: 0 0 0 3px rgba(244,106,34,.18);
+      background:#fff;
+    }
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:12px;
+      color:#0f172a;
+      font-weight:800;
+    }
+
+    .checkbox{
+      width:18px; height:18px;
+      accent-color: #111827;
+      cursor:pointer;
+    }
+
+    .subgridRight{
+      display:grid;
+      grid-template-rows: auto auto;
+      gap:14px;
+    }
+
+    /* ====== RESPONSIVO ====== */
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+      .tables{ grid-template-columns: 1fr; }
+      .midBars{ grid-template-columns: 1fr; }
+      .kpiRow{ grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px){
+      .kpiRow{ grid-template-columns: 1fr; }
+      .sideBottom .big{ font-size:36px; }
+      .month{ font-size:24px; }
+      .miniRow{ grid-template-columns: 88px 1fr 74px; }
+    }
+  </style>
 </head>
+
 <body>
+  <div class="wrap">
+    <div class="month" id="monthTitle">OUTUBRO</div>
 
-    <h1>Orçamento Mensal</h1>
+    <div class="grid">
+      <!-- ====== COLUNA ESQUERDA (KPIs + barras + tabelas) ====== -->
+      <div>
+        <!-- KPIs -->
+        <div class="kpiRow" id="kpiRow">
+          <div class="kpi">
+            <div class="bar green" id="barAtivos"></div>
+            <div class="label">ATIVOS</div>
+            <div class="value" id="kpiAtivos">R$ 0,00</div>
+          </div>
 
-    <div id="lista"></div>
+          <div class="kpi">
+            <div class="bar navy" id="barSalario"></div>
+            <div class="label">SALARIO</div>
+            <div class="value" id="kpiSalario">R$ 0,00</div>
+          </div>
 
-    <div id="form-container" class="form-container hidden">
-        <h2>Novo Cadastro</h2>
+          <div class="kpi">
+            <div class="bar navy" id="barTotal"></div>
+            <div class="label">TOTAL</div>
+            <div class="value" id="kpiTotal">R$ 0,00</div>
+          </div>
 
-        <input id="descricao" type="text" placeholder="Descrição">
-        <input id="valor" type="number" placeholder="Valor (R$)">
-        <input id="categoria" type="text" placeholder="Categoria">
+          <div class="kpi">
+            <div class="bar orange" id="barDividas"></div>
+            <div class="label">DIVIDAS</div>
+            <div class="value" id="kpiDividas">R$ 0,00</div>
+          </div>
 
-        <button id="salvar">Salvar</button>
-        <button id="fechar" class="fechar">Fechar</button>
+          <div class="kpi">
+            <div class="bar green" id="barSaldo"></div>
+            <div class="label">SALDO</div>
+            <div class="value" id="kpiSaldo">R$ 0,00</div>
+          </div>
+        </div>
+
+        <!-- Barras intermediárias (Despesas / Renda) -->
+        <div class="midBars">
+          <div class="barCard">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+              <div>
+                <div style="font-size:13px; color:#0f172a; font-weight:900; margin-bottom:2px;">Despesas</div>
+                <div style="color:var(--muted); font-size:12px;">total</div>
+              </div>
+              <div class="pill"><span id="pctPago">0%</span> <span style="color:var(--muted); font-weight:800;">pago</span></div>
+            </div>
+
+            <div class="miniRows" style="margin-top:10px;">
+              <div class="miniRow">
+                <div style="color:var(--muted);">total</div>
+                <div class="track"><div class="fill orange" id="barDespTotal" style="width:100%"></div></div>
+                <div class="amt" id="despTotal">R$ 0,00</div>
+              </div>
+              <div class="miniRow">
+                <div style="color:var(--muted);">Pago</div>
+                <div class="track"><div class="fill navy" id="barDespPago" style="width:0%"></div></div>
+                <div class="amt" id="despPago">R$ 0,00</div>
+              </div>
+              <div class="miniRow">
+                <div style="color:var(--muted);">Saldo</div>
+                <div class="track"><div class="fill green" id="barDespSaldo" style="width:0%"></div></div>
+                <div class="amt" id="despSaldo">R$ 0,00</div>
+              </div>
+              <div class="miniRow">
+                <div style="color:var(--muted);">Saldo em conta</div>
+                <div class="track"><div class="fill green" id="barDespConta" style="width:0%"></div></div>
+                <div class="amt" id="despConta">R$ 0,00</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="barCard">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+              <div style="font-size:13px; color:#0f172a; font-weight:900;">Renda</div>
+              <div class="pill"><span style="color:var(--muted); font-weight:800;">Ativos</span> <b id="rendaAtivos">R$ 0,00</b></div>
+            </div>
+
+            <div class="miniRows" style="margin-top:12px;">
+              <div class="miniRow">
+                <div style="color:var(--muted);">Ativos</div>
+                <div class="track"><div class="fill navy" id="barRendaAtivos" style="width:100%"></div></div>
+                <div class="amt" id="rendaAtivos2">R$ 0,00</div>
+              </div>
+              <div class="miniRow">
+                <div style="color:var(--muted);">Descontos</div>
+                <div class="track"><div class="fill orange" id="barRendaDesc" style="width:0%"></div></div>
+                <div class="amt" id="rendaDesc">R$ 0,00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabelas -->
+        <div class="tables">
+          <!-- DESPESAS -->
+          <div class="tcard">
+            <div class="thead">
+              <h3>Despesas</h3>
+              <div class="meta">
+                <span>Total <b id="sumDesp">R$ 0,00</b></span>
+                <span>Pago <b id="sumDespPago">R$ 0,00</b></span>
+                <span>Falta <b id="sumDespFalta">R$ 0,00</b></span>
+              </div>
+            </div>
+
+            <table id="tblDespesas">
+              <thead>
+                <tr>
+                  <th style="width:48%;">Itens</th>
+                  <th class="right" style="width:18%;">Total</th>
+                  <th class="center" style="width:16%;">Pago</th>
+                  <th class="right" style="width:18%;">Falta</th>
+                </tr>
+              </thead>
+              <tbody class="soft"></tbody>
+            </table>
+          </div>
+
+          <!-- DIREITA: RENDA + DESCONTOS -->
+          <div class="subgridRight">
+            <div class="tcard">
+              <div class="thead">
+                <h3>Renda</h3>
+                <div class="meta">
+                  <span>Planejado <b id="rendaPlan">R$ 0,00</b></span>
+                  <span>Real <b id="rendaReal">R$ 0,00</b></span>
+                  <span>Dif <b id="rendaDif">R$ 0,00</b></span>
+                </div>
+              </div>
+
+              <table id="tblRenda">
+                <thead>
+                  <tr>
+                    <th style="width:44%;">Itens</th>
+                    <th class="right" style="width:18%;">Planejado</th>
+                    <th class="right" style="width:18%;">Real</th>
+                    <th class="right" style="width:20%;">Diferença</th>
+                  </tr>
+                </thead>
+                <tbody class="soft"></tbody>
+              </table>
+            </div>
+
+            <div class="tcard">
+              <div class="thead">
+                <h3>Descontos</h3>
+                <div class="meta">
+                  <span>Total <b id="descTotal">R$ 0,00</b></span>
+                </div>
+              </div>
+
+              <table id="tblDescontos">
+                <thead>
+                  <tr>
+                    <th style="width:44%;">Itens</th>
+                    <th class="right" style="width:18%;">Planejado</th>
+                    <th class="right" style="width:18%;">Real</th>
+                    <th class="right" style="width:20%;">Diferença</th>
+                  </tr>
+                </thead>
+                <tbody class="soft"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== COLUNA DIREITA (card grande como na imagem) ====== -->
+      <aside class="sideCard">
+        <div class="sideTop">
+          <div class="ttl">SALARIO BRUTO</div>
+          <div class="money" id="salarioBruto">R$ 0,00</div>
+        </div>
+
+        <div class="sideMid">
+          <div class="pct" id="economiaPct">+0%</div>
+          <div class="sub">Aumento da economia total</div>
+        </div>
+
+        <div style="text-align:center; margin-bottom:10px;">
+          <div style="font-size:30px; font-weight:950;" id="ecoMes">R$ 0,00</div>
+          <div class="sub">Economia do mês</div>
+        </div>
+
+        <div class="sideBottom">
+          <div>
+            <div class="big" id="totalBig">R$ 0,00</div>
+          </div>
+          <div class="recv">
+            <div style="color:#111827; font-size:12px;">RECEBI</div>
+            <div><b id="recebi">R$ 0,00</b></div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; border-top:1px solid var(--line); padding-top:12px; display:grid; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:var(--muted); font-size:12px; font-weight:800;">Editar rápido</span>
+            <button id="resetBtn" style="border:none; background:#111827; color:#fff; padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;">
+              Reset
+            </button>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div style="border:1px solid var(--line); border-radius:14px; padding:10px;">
+              <div style="font-size:12px; color:var(--muted); font-weight:800;">Ativos (R$)</div>
+              <input id="inpAtivos" inputmode="decimal" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--line); font-family:var(--mono); font-weight:900;" />
+            </div>
+            <div style="border:1px solid var(--line); border-radius:14px; padding:10px;">
+              <div style="font-size:12px; color:var(--muted); font-weight:800;">Salário (R$)</div>
+              <input id="inpSalario" inputmode="decimal" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--line); font-family:var(--mono); font-weight:900;" />
+            </div>
+          </div>
+          <div style="border:1px solid var(--line); border-radius:14px; padding:10px;">
+            <div style="font-size:12px; color:var(--muted); font-weight:800;">Recebi (R$)</div>
+            <input id="inpRecebi" inputmode="decimal" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--line); font-family:var(--mono); font-weight:900;" />
+          </div>
+          <div style="font-size:12px; color:var(--muted);">
+            Dica: Edite valores nas tabelas e marque “Pago”. O painel recalcula sozinho.
+          </div>
+        </div>
+      </aside>
     </div>
+  </div>
 
-    <button id="add-btn" class="add-btn">+</button>
+<script>
+  // ===== Utils =====
+  const brl = (n) => (isNaN(n) ? 0 : n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
 
-    <script src="script.js"></script>
+  function parseBRL(text){
+    // aceita "8036", "8.036,00", "R$ 8.036,00"
+    if (text == null) return 0;
+    const s = String(text).replace(/[^\d,.-]/g,"").replace(/\./g,"").replace(",",".");
+    const v = Number(s);
+    return isNaN(v) ? 0 : v;
+  }
+
+  // ===== Data (você pode trocar pelos seus itens reais) =====
+  const state = {
+    month: "OUTUBRO",
+    ativos: 2138,
+    salario: 5898,
+    recebi: 6320,
+    economiaPct: 18, // só visual por enquanto (pode calcular depois)
+    despesas: [
+      { name:"ALUGUEL", total:1450, paid:true },
+      { name:"FEIRA", total:700, paid:true },
+      { name:"ENERGIA", total:0, paid:true },
+      { name:"INTERNET", total:0, paid:true },
+      { name:"BARBEIRO", total:40, paid:true },
+      { name:"GASOLINA", total:150, paid:true },
+      { name:"QAJ SERVIÇO", total:250, paid:true },
+      { name:"Aprov Cia", total:40, paid:true },
+      { name:"consignado moto", total:966, paid:true },
+      { name:"consignado investir", total:750, paid:true },
+      { name:"Cartao NU", total:0, paid:true },
+      { name:"Cartao sa", total:2617, paid:true },
+      { name:"Cartao itau", total:0, paid:true },
+    ],
+    renda: [
+      { name:"Totais", planned:0, real:2138 },
+      { name:"extras", planned:0, real:818 },
+      { name:"diarias", planned:0, real:1320 },
+      { name:"outros", planned:0, real:0 },
+      { name:"outros", planned:0, real:0 },
+    ],
+    descontos: [
+      { name:"ir 5,3%", planned:395, real:345 },
+      { name:"faz/ceso", planned:26.40, real:26 },
+      { name:"sistema social", planned:482, real:482 },
+      { name:"funsal", planned:39.60, real:40 },
+    ]
+  };
+
+  // ===== Render tables =====
+  const tbDespesas = document.querySelector("#tblDespesas tbody");
+  const tbRenda = document.querySelector("#tblRenda tbody");
+  const tbDescontos = document.querySelector("#tblDescontos tbody");
+
+  function makeEditableCell(value, onCommit){
+    const span = document.createElement("span");
+    span.className = "editable";
+    span.contentEditable = "true";
+    span.textContent = brl(value);
+
+    const commit = () => {
+      const v = parseBRL(span.textContent);
+      span.textContent = brl(v);
+      onCommit(v);
+      recalc();
+    };
+
+    span.addEventListener("blur", commit);
+    span.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        span.blur();
+      }
+    });
+    return span;
+  }
+
+  function render(){
+    document.getElementById("monthTitle").textContent = state.month;
+
+    // inputs rápidos
+    document.getElementById("inpAtivos").value = state.ativos;
+    document.getElementById("inpSalario").value = state.salario;
+    document.getElementById("inpRecebi").value = state.recebi;
+
+    tbDespesas.innerHTML = "";
+    state.despesas.forEach((d, idx)=>{
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.textContent = d.name;
+      tdName.style.fontWeight = "900";
+
+      const tdTotal = document.createElement("td");
+      tdTotal.className = "right";
+      tdTotal.appendChild(makeEditableCell(d.total, (v)=> state.despesas[idx].total = v));
+
+      const tdPaid = document.createElement("td");
+      tdPaid.className = "center";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.className = "checkbox";
+      cb.checked = !!d.paid;
+      cb.addEventListener("change", ()=>{ state.despesas[idx].paid = cb.checked; recalc(); });
+      tdPaid.appendChild(cb);
+
+      const tdFalta = document.createElement("td");
+      tdFalta.className = "right";
+      tdFalta.style.fontFamily = "var(--mono)";
+      tdFalta.style.fontWeight = "900";
+      tdFalta.dataset.faltaIdx = idx;
+
+      tr.append(tdName, tdTotal, tdPaid, tdFalta);
+      tbDespesas.appendChild(tr);
+    });
+
+    tbRenda.innerHTML = "";
+    state.renda.forEach((r, idx)=>{
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.textContent = r.name;
+
+      const tdP = document.createElement("td");
+      tdP.className = "right";
+      tdP.appendChild(makeEditableCell(r.planned, (v)=> state.renda[idx].planned = v));
+
+      const tdR = document.createElement("td");
+      tdR.className = "right";
+      tdR.appendChild(makeEditableCell(r.real, (v)=> state.renda[idx].real = v));
+
+      const tdD = document.createElement("td");
+      tdD.className = "right";
+      tdD.style.fontFamily = "var(--mono)";
+      tdD.style.fontWeight = "900";
+      tdD.dataset.rendaDiffIdx = idx;
+
+      tr.append(tdName, tdP, tdR, tdD);
+      tbRenda.appendChild(tr);
+    });
+
+    tbDescontos.innerHTML = "";
+    state.descontos.forEach((r, idx)=>{
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.textContent = r.name;
+
+      const tdP = document.createElement("td");
+      tdP.className = "right";
+      tdP.appendChild(makeEditableCell(r.planned, (v)=> state.descontos[idx].planned = v));
+
+      const tdR = document.createElement("td");
+      tdR.className = "right";
+      tdR.appendChild(makeEditableCell(r.real, (v)=> state.descontos[idx].real = v));
+
+      const tdD = document.createElement("td");
+      tdD.className = "right";
+      tdD.style.fontFamily = "var(--mono)";
+      tdD.style.fontWeight = "900";
+      tdD.dataset.descDiffIdx = idx;
+
+      tr.append(tdName, tdP, tdR, tdD);
+      tbDescontos.appendChild(tr);
+    });
+
+    recalc();
+  }
+
+  // ===== Calculations / UI update =====
+  function recalc(){
+    const ativos = Number(state.ativos) || 0;
+    const salario = Number(state.salario) || 0;
+
+    const total = ativos + salario;
+
+    const despTotal = state.despesas.reduce((a,b)=>a+(Number(b.total)||0),0);
+    const despPago = state.despesas.reduce((a,b)=>a+((b.paid? (Number(b.total)||0):0)),0);
+    const despFalta = despTotal - despPago;
+
+    const dividas = despTotal; // no layout original “DIVIDAS” parece igual às despesas totais
+    const saldo = total - despTotal;
+
+    // Top KPIs
+    document.getElementById("kpiAtivos").textContent = brl(ativos);
+    document.getElementById("kpiSalario").textContent = brl(salario);
+    document.getElementById("kpiTotal").textContent = brl(total);
+    document.getElementById("kpiDividas").textContent = brl(dividas);
+    document.getElementById("kpiSaldo").textContent = brl(saldo);
+
+    // barras alturas (aprox)
+    const maxK = Math.max(1, total, dividas, ativos, salario, Math.abs(saldo));
+    document.getElementById("barAtivos").style.height = (18 + 50*(ativos/maxK))+"px";
+    document.getElementById("barSalario").style.height = (18 + 50*(salario/maxK))+"px";
+    document.getElementById("barTotal").style.height = (18 + 50*(total/maxK))+"px";
+    document.getElementById("barDividas").style.height = (18 + 50*(dividas/maxK))+"px";
+    document.getElementById("barSaldo").style.height = (18 + 50*(Math.max(0,saldo)/maxK))+"px";
+
+    // Card grande direita
+    document.getElementById("salarioBruto").textContent = brl(salario + (state.descontos.reduce((a,b)=>a+(Number(b.real)||0),0))); // aproximação
+    document.getElementById("economiaPct").textContent = (state.economiaPct>=0?"+":"") + state.economiaPct + "%";
+    document.getElementById("ecoMes").textContent = brl(Math.max(0, saldo)); // economia do mês = saldo (aprox)
+    document.getElementById("totalBig").textContent = brl(total);
+    document.getElementById("recebi").textContent = brl(state.recebi);
+
+    // Barras de despesas
+    document.getElementById("despTotal").textContent = brl(despTotal);
+    document.getElementById("despPago").textContent = brl(despPago);
+    document.getElementById("despSaldo").textContent = brl(Math.max(0, saldo));
+    document.getElementById("despConta").textContent = brl(Math.max(0, saldo));
+
+    const pagoPct = despTotal>0 ? (despPago/despTotal)*100 : 0;
+    document.getElementById("pctPago").textContent = pagoPct.toFixed(2).replace(".",",") + "%";
+    document.getElementById("barDespPago").style.width = clamp(pagoPct,0,100)+"%";
+    document.getElementById("barDespSaldo").style.width = clamp((Math.max(0,saldo)/Math.max(1,despTotal))*100,0,100)+"%";
+    document.getElementById("barDespConta").style.width = clamp((Math.max(0,saldo)/Math.max(1,despTotal))*100,0,100)+"%";
+
+    // Renda (barras)
+    const descontosReal = state.descontos.reduce((a,b)=>a+(Number(b.real)||0),0);
+    document.getElementById("rendaAtivos").textContent = brl(ativos);
+    document.getElementById("rendaAtivos2").textContent = brl(ativos);
+    document.getElementById("rendaDesc").textContent = brl(descontosReal);
+
+    document.getElementById("barRendaAtivos").style.width = "100%";
+    document.getElementById("barRendaDesc").style.width = clamp((descontosReal/Math.max(1,ativos))*100,0,100)+"%";
+
+    // Totais Despesas (tabela)
+    document.getElementById("sumDesp").textContent = brl(despTotal);
+    document.getElementById("sumDespPago").textContent = brl(despPago);
+    document.getElementById("sumDespFalta").textContent = brl(despFalta);
+
+    // Preencher “Falta” por linha
+    state.despesas.forEach((d, idx)=>{
+      const falta = d.paid ? 0 : (Number(d.total)||0);
+      const td = document.querySelector(`[data-falta-idx="${idx}"]`);
+      if(td) td.textContent = brl(falta);
+    });
+
+    // Totais Renda
+    const rendaPlan = state.renda.reduce((a,b)=>a+(Number(b.planned)||0),0);
+    const rendaReal = state.renda.reduce((a,b)=>a+(Number(b.real)||0),0);
+    document.getElementById("rendaPlan").textContent = brl(rendaPlan);
+    document.getElementById("rendaReal").textContent = brl(rendaReal);
+    document.getElementById("rendaDif").textContent = brl(rendaReal - rendaPlan);
+
+    state.renda.forEach((r, idx)=>{
+      const diff = (Number(r.real)||0) - (Number(r.planned)||0);
+      const td = document.querySelector(`[data-renda-diff-idx="${idx}"]`);
+      if(td) td.textContent = brl(diff);
+    });
+
+    // Totais Descontos
+    const descPlan = state.descontos.reduce((a,b)=>a+(Number(b.planned)||0),0);
+    const descReal = state.descontos.reduce((a,b)=>a+(Number(b.real)||0),0);
+    document.getElementById("descTotal").textContent = brl(descReal);
+
+    state.descontos.forEach((r, idx)=>{
+      const diff = (Number(r.real)||0) - (Number(r.planned)||0);
+      const td = document.querySelector(`[data-desc-diff-idx="${idx}"]`);
+      if(td) td.textContent = brl(diff);
+    });
+  }
+
+  // ===== Quick inputs =====
+  function bindQuickInputs(){
+    const ia = document.getElementById("inpAtivos");
+    const is = document.getElementById("inpSalario");
+    const ir = document.getElementById("inpRecebi");
+
+    const handler = ()=>{
+      state.ativos = parseBRL(ia.value);
+      state.salario = parseBRL(is.value);
+      state.recebi = parseBRL(ir.value);
+      recalc();
+    };
+
+    ia.addEventListener("input", handler);
+    is.addEventListener("input", handler);
+    ir.addEventListener("input", handler);
+
+    document.getElementById("resetBtn").addEventListener("click", ()=>{
+      // reset simples para valores iniciais do state (recarrega a página)
+      location.reload();
+    });
+  }
+
+  render();
+  bindQuickInputs();
+</script>
 </body>
 </html>
